@@ -1,10 +1,17 @@
 # langchain-course
 
-A small LangChain example: take notes about a person, fill a prompt template, send it to an LLM, print a summary and two facts.
+LangChain practice repo. Each **chapter is a git branch**. Checkout the chapter you are on, then run `main.py`.
 
-Uses a Python **virtualenv** and **OpenRouter** (not uv).
+| Chapter | Branch | What you build |
+|---------|--------|----------------|
+| 1 | `chapter-01-hello-world` | `PromptTemplate` + `ChatOpenAI` + a chain (`prompt \| llm`) |
+| 2 | *(not started)* | Next lesson — new branch when you begin it |
 
-## What you will learn
+`main` stays in sync with the latest finished chapter.
+
+## Chapter 1 — hello world chain
+
+Take notes about a person, fill a prompt template, send it to an LLM, print a short summary and two facts.
 
 | Piece | What it does |
 |--------|----------------|
@@ -14,6 +21,10 @@ Uses a Python **virtualenv** and **OpenRouter** (not uv).
 | `invoke({...})` | Runs the chain once. `response.content` is the model's text. |
 
 Code and comments: `main.py`.
+
+```bash
+git checkout chapter-01-hello-world
+```
 
 ## Setup
 
