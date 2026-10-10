@@ -1,62 +1,67 @@
 # langchain-course
 
-LangChain practice repo. Each **chapter is a git branch**. Checkout the chapter you are on, then run `main.py`.
+Practice repo for LangChain. **Work happens on `main`.** When a lesson is ready to save:
 
-| Chapter | Branch | What you build |
-|---------|--------|----------------|
-| 1 | `chapter-01-hello-world` | `PromptTemplate` + `ChatOpenAI` + a chain (`prompt \| llm`) |
-| 2 | *(not started)* | Next lesson — new branch when you begin it |
+1. Push `main`
+2. Create / update a `chapter-NN-short-name` branch from that same commit
+3. Add a row in the chapter table below
+4. Expand **Concepts** for what that chapter teaches (this README is for ideas, `main.py` is for code)
 
-`main` stays in sync with the latest finished chapter.
+## Chapters
 
-## Chapter 1 — hello world chain
+| Chapter | Branch | Code (short) | Concepts |
+|---------|--------|----------------|----------|
+| 1 | `chapter-01-hello-world` | Person notes → prompt → LLM → print summary | PromptTemplate, ChatOpenAI, LCEL `\|`, invoke |
 
-Take notes about a person, fill a prompt template, send it to an LLM, print a short summary and two facts.
+## How we work
 
-| Piece | What it does |
-|--------|----------------|
-| `PromptTemplate` | A prompt with a hole `{information}`. LangChain fills it when you run the chain. |
-| `ChatOpenAI` | Chat model. `base_url` points at OpenRouter so one key can use many models. |
-| `prompt \| llm` | A **chain** (LCEL): filled prompt goes into the model. |
-| `invoke({...})` | Runs the chain once. `response.content` is the model's text. |
-
-Code and comments: `main.py`.
-
-```bash
-git checkout chapter-01-hello-world
-```
+- Build and run on **`main`**.
+- Do not invent empty chapter branches. Branch only when that chapter’s code is on `main`.
+- README: **minimal** “what the script does”, **detailed** “what LangChain idea this is”.
 
 ## Setup
-
-Python 3.11+ recommended.
 
 ```bash
 python -m venv venv
 source venv/Scripts/activate   # Windows Git Bash
 pip install -r requirements.txt
-cp .env.example .env
-```
-
-Put your [OpenRouter](https://openrouter.ai/keys) key in `.env`:
-
-```
-OPENROUTER_API_KEY=your_key_here
-```
-
-Do not commit `.env` or `venv/`.
-
-## Run
-
-```bash
+cp .env.example .env           # OPENROUTER_API_KEY=...
 python main.py
 ```
 
-In Cursor / VS Code: select interpreter `venv/Scripts/python.exe`, then Run Python File.
+Pick interpreter `venv/Scripts/python.exe` if you use Run Python File. Do not commit `.env` or `venv/`.
 
-## Project files
+---
 
-```
-main.py            prompt + model + chain
-requirements.txt   pip packages
-.env.example       copy to .env and add your key
-```
+## Chapter 1 — hello world chain
+
+**Code:** `main.py` takes a short paragraph about a person, fills `{information}` in a template, calls the model, prints the reply (summary + two facts).
+
+### Concepts
+
+**1. Prompt vs prompt template**  
+A prompt is the final text the model sees. A **template** is that text with named holes: `{information}`. You write the instructions once. Each run you only pass new data.  
+`{information}` is **not** a Python f-string. LangChain replaces it at `invoke()` time. If you used an f-string, the hole would be filled in Python *before* LangChain sees the template, and you would lose reuse and validation.
+
+**2. `PromptTemplate`**  
+Wraps the string and lists `input_variables` (here: `information`). Those names must match the `{...}` in the template and the keys in the dict you pass to `invoke`. If a variable is missing, LangChain errors **before** you pay for an LLM call.
+
+**3. Chat model (`ChatOpenAI`)**  
+The LLM is an object, not a raw HTTP call in `main`. We use the OpenAI-compatible client with `base_url=https://openrouter.ai/api/v1` so `OPENROUTER_API_KEY` can reach `openai/gpt-4o-mini` (and other models later by changing the `model` string).  
+`temperature=0` makes answers more stable (good for “summarise these facts”). Higher temperature = more variety.
+
+**4. Chain and the pipe `|` (LCEL)**  
+`chain = summary_prompt_template | llm` means: output of the left step is input of the right.  
+- Left: turn `{information: "..."}` into a full prompt.  
+- Right: send that prompt to the model.  
+You do not manually build a `messages=[...]` list. That composition is **LCEL** (LangChain Expression Language).
+
+**5. `invoke`**  
+`chain.invoke({"information": information})` runs the chain **once**, blocking until the full answer is back. The return value is an `AIMessage`. The usable text is `.content`.  
+Later chapters can add `.stream()` (tokens as they arrive) or more steps in the pipe (`prompt | llm | parser`).
+
+**6. Secrets**  
+`load_dotenv()` reads `.env` into `os.environ`. The key stays off GitHub. Without it, `ChatOpenAI` cannot call the API.
+
+**7. `if __name__ == "__main__"`**  
+Run Python File executes the file as a script. It only *calls* `main()` if this block exists. Otherwise the file loads and exits.
